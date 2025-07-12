@@ -36,7 +36,8 @@ $(function () {
     $("#window").data("kendoWindow").center().open();
   });
 
-  const validator = $("#bookForm")
+  //資料驗證
+  window.validator = $("#bookForm")
     .kendoValidator({
       rules: {
         boughtDateValid: function (input) {
@@ -56,7 +57,6 @@ $(function () {
             const [month, day, year] = parts.map(Number);
             const date = new Date(year, month - 1, day);
 
-            // ✅ 邏輯錯誤檢查
             if (
               isNaN(date.getTime()) ||
               date.getFullYear() !== year ||
@@ -70,11 +70,7 @@ $(function () {
               return false;
             }
 
-            // ✅ 未來日期檢查（注意：這要寫在邏輯正確之後）
             const today = new Date();
-            date.setHours(0, 0, 0, 0);
-            today.setHours(0, 0, 0, 0);
-
             if (date > today) {
               input.attr("data-boughtDateValid-msg", "購買日期不能是未來日期");
               return false;
@@ -98,10 +94,36 @@ $(function () {
     if (!validator.validate()) {
       e.preventDefault();
       alert("請修正錯誤後再送出！");
-    } else {
-      alert("驗證通過，可送出！");
-      // 可改為 AJAX 提交資料
+      return;
     }
+
+    //資料送出
+
+    const bookclass = $("#book_class").val();
+    const name = $("#book_name").val().trim();
+    const author = $("#book_author").val().trim();
+    const boughtDate = $("#bought_datepicker").val().trim();
+
+    const newBook = {
+      id: Date.now(),
+      bookclass,
+      name,
+      author,
+      boughtDate,
+    };
+
+    //讀取localhost目前的資料
+    const stored = localStorage.getItem("BookList");
+    const BookList = stored ? JSON.parse(stored) : [];
+
+    //加入新資料
+    BookList.push(newBook);
+
+    localStorage.setItem("BookList", JSON.stringify(BookList));
+
+    alert("新增成功！");
+    // 清空欄位
+    this.reset(); // 清空表單
   });
 
   //Grid
