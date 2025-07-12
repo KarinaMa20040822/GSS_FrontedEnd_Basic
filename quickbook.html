@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="./css/kendo.common-material.min.css" />
+    <link rel="stylesheet" href="./css/kendo.material-main.min.css" />
+    <!-- <link rel="stylesheet" href="./css/uikit.min.css"> -->
+    <link rel="stylesheet" href="./css/bootstrap.min.css" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <title>圖書館</title>
+  </head>
+
+  <body>
+    <header>
+      <nav class="navbar">
+        <h1 class="navbar-title text-center">圖書管理系統</h1>
+      </nav>
+    </header>
+    <main>
+      <!-- 
+            Kendo Template kendo 樣板 
+            https://docs.telerik.com/kendo-ui/api/javascript/kendo/methods/template 
+        -->
+      <script type="text/x-kendo-template" id="quickBookFormTemplate">
+        <div class='row'>
+            <!-- #= id# -->
+            <div class='col'>
+                <label>圖書類別</label>
+                <select style='width: 100%;'></select>
+            </div>
+            <div class='col'>
+                <label>書名</label>
+                <input name='bookName' data-identify="bookName" class='book-name' type='text' class='k-textbox' style='width: 100%;'
+                    required validationMessage='書名不可空白' />
+            </div>
+            <div class='col'>
+                <label>作者</label>
+                <input type='text' class='k-textbox' style='width: 100%;' />
+            </div>
+            <div class='col'>
+                <label>購買日期</label>
+                <input style='width: 100%' />
+            </div>
+            <div class='col'>
+                <a class='btnDeleteItem' href='\\#'>
+                    <span class='k-icon k-font-icon k-i-x-outline'
+                        style='color: red;font-size: 24px;margin-top: 30px;'></span>
+                </a>
+            </div>
+        </div>
+      </script>
+
+      <div class="container-md">
+        <div class="row">
+          <div class="col">
+            <label>圖書類別</label>
+            <select id="default_book_class" style="width: 100%"></select>
+          </div>
+          <div class="col">
+            <label>書名</label>
+            <input
+              id="default_book_name"
+              type="text"
+              class="k-textbox"
+              style="width: 100%"
+            />
+          </div>
+          <div class="col">
+            <label>作者</label>
+            <input
+              id="default_book_author"
+              type="text"
+              class="k-textbox"
+              style="width: 100%"
+            />
+          </div>
+
+          <div class="col">
+            <label>購買日期</label>
+            <input
+              id="default_bought_datepicker"
+              title="datepicker"
+              style="width: 100%"
+            />
+          </div>
+          <div class="col">
+            <a id="btn_add_item" href="#">
+              <span
+                class="k-icon k-font-icon k-i-plus-outline"
+                style="color: #0e21ce; font-size: 24px; margin-top: 30px"
+              ></span>
+            </a>
+          </div>
+          <div class="col">
+            <a href="./index.html" class="fw-bold" style="text-decoration: none"
+              >回首頁</a
+            >
+          </div>
+        </div>
+        <hr />
+
+        <div id="book_item_container"></div>
+        <div style="margin: 10px">
+          <button class="k-button k-primary btn-add-book">新增書籍</button>
+        </div>
+      </div>
+    </main>
+
+    <footer></footer>
+  </body>
+  <script type="text/javascript" src="data/book-data.js"></script>
+  <script type="text/javascript" src="data/book-class-data.js"></script>
+  <script src="./js/jquery.min.js"></script>
+  <script src="./js/bootstrap.bundle.js"></script>
+  <script src="./js/kendo.all.min.js"></script>
+  <script src="./js/utility.js"></script>
+  <script src="./js/quickbook.js"></script>
+</html>
