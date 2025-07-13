@@ -12,7 +12,9 @@ $(function () {
     change: onChange,
   });
 
-  $("#bought_datepicker").kendoDatePicker();
+  $("#bought_datepicker").kendoDatePicker({
+    format: "yyyy/MM/dd",
+  });
 
   //換圖片
   $("#book_class").on("change", function () {
@@ -42,10 +44,12 @@ $(function () {
     .kendoValidator({
       rules: {
         boughtDateValid: function (input) {
+          // 只對購買日期是否有效
           if (input.is("[name='bought_date']")) {
             const val = input.val().trim();
             if (!val) return true;
 
+            //分割出來不是三段（月、日、年），表示驗證不通過
             const parts = val.split("/");
             if (parts.length !== 3) {
               input.attr(
@@ -54,11 +58,16 @@ $(function () {
               );
               return false;
             }
+            //parts 是一個陣列（例如：["yyyy", "mm", "dd"]）。
+            //.map(Number)：把每個字串轉成數字 → [yyyy, mm, dd]
+            const [year, month, day] = parts.map(Number);
 
-            const [month, day, year] = parts.map(Number);
+            //因為js的月份是從0開始算
             const date = new Date(year, month - 1, day);
 
+            // 檢查日期是否有效
             if (
+              //isNaN(是否非數字值)
               isNaN(date.getTime()) ||
               date.getFullYear() !== year ||
               date.getMonth() !== month - 1 ||
@@ -225,6 +234,7 @@ function loadBookData() {
 function onChange() {}
 
 function deleteBook(e) {
+  // const grid = $("#book_grid").data("kendoGrid");
   var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
   debugger;
   console.log(dataItem);
@@ -233,6 +243,19 @@ function deleteBook(e) {
   if (!confirm("確定要刪除這本書嗎？")) {
     return;
   }
+  if (dataItem.source === "metadata") {
+    // 刪除 BOOK_METADATA 中的資料
+    BOOK_METADATA = BOOK_METADATA.filter(
+      (book) => book.BookId !== dataItem.BookId
+    );
+    localStorage.setItem("bookData", JSON.stringify(BOOK_METADATA)); // 更新 LocalStorage（如果有儲存）
+  } else if (dataItem.source === "local") {
+    // 刪除 localStorage 中的資料
+    const books = getBooksFromLocalStorage();
+    const updated = books.filter((book) => book.BookId !== dataItem.BookId);
+    localStorage.setItem("BookList", JSON.stringify(updated));
+  }
+
   utility.showNotify("刪除成功");
   refreshGrid();
 }
