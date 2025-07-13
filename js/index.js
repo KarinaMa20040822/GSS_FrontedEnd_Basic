@@ -21,6 +21,7 @@ $(function () {
       $("#book-image").attr("src", `image/${selectedClass}.jpg`);
     }
   });
+
   //彈跳視窗
   $("#window").kendoWindow({
     title: "新增書籍",
@@ -89,46 +90,90 @@ $(function () {
       },
     })
     .data("kendoValidator");
+  $("#bookForm").on("submit", function (e) {
+    e.preventDefault(); // ← 這裡要先阻止表單預設行為
+    if (!validator.validate()) {
+      e.preventDefault();
+      alert("請修正錯誤後再送出！");
+      return;
+    }
 
-  if (!validator.validate()) {
-    e.preventDefault();
-    alert("請修正錯誤後再送出！");
-    return;
-  }
+    //資料送出
 
-  //資料送出
+    const bookclass = $("#book_class").val();
+    const name = $("#book_name").val().trim();
+    const author = $("#book_author").val().trim();
+    const boughtDate = $("#bought_datepicker").val().trim();
 
-  const bookclass = $("#book_class").val();
-  const name = $("#book_name").val().trim();
-  const author = $("#book_author").val().trim();
-  const boughtDate = $("#bought_datepicker").val().trim();
+    const newBook = {
+      BookId: Date.now(),
+      BookClassName: bookclass,
+      BookName: name,
+      BookAuthor: author,
+      BookBoughtDate: boughtDate,
+    };
 
-  const newBook = {
-    BookId: Date.now(),
-    BookClassName: bookclass,
-    BookName: name,
-    BookAuthor: author,
-    BookBoughtDate: boughtDate,
-  };
+    //讀取localhost目前的資料
+    const stored = localStorage.getItem("BookList");
+    const BookList = stored ? JSON.parse(stored) : [];
 
-  //讀取localhost目前的資料
-  const stored = localStorage.getItem("BookList");
-  const BookList = stored ? JSON.parse(stored) : [];
+    //加入新資料
+    BookList.push(newBook);
 
-  //加入新資料
-  BookList.push(newBook);
+    localStorage.setItem("BookList", JSON.stringify(BookList));
 
-  localStorage.setItem("BookList", JSON.stringify(BookList));
+    alert("新增成功！");
+    const grid = $("#book_grid").data("kendoGrid");
+    if (grid) {
+      grid.dataSource.data(getBooksFromLocalStorage());
+    }
+    // 清空欄位
+    this.reset(); // 清空表單
+  });
 
-  alert("新增成功！");
-  const grid = $("#book_grid").data("kendoGrid");
-  if (grid) {
-    grid.dataSource.data(getBooksFromLocalStorage());
-  }
-  // 清空欄位
-  this.reset(); // 清空表單
+  //Grid
+  loadBookData();
+
+  $("#book_grid").kendoGrid({
+    dataSource: {
+      data: getCombinedBookData(), //  合併資料來源
+
+      schema: {
+        model: {
+          fields: {
+            BookId: { type: "int" },
+            BookName: { type: "string" },
+            BookClassName: { type: "string" },
+            BookAuthor: { type: "string" },
+            BookBoughtDate: { type: "string" },
+          },
+        },
+      },
+      pageSize: 20,
+    },
+    toolbar: kendo.template(
+      "<div class='book-grid-toolbar'><input class='book-grid-search' placeholder='我想要找......' type='text'></input></div>"
+    ),
+    height: 550,
+    sortable: true,
+    pageable: {
+      input: true,
+      numeric: false,
+    },
+    columns: [
+      { field: "BookId", title: "書籍編號", width: "10%" },
+      { field: "BookName", title: "書籍名稱", width: "50%" },
+      { field: "BookClassName", title: "書籍種類", width: "10%" },
+      { field: "BookAuthor", title: "作者", width: "15%" },
+      { field: "BookBoughtDate", title: "購買日期", width: "15%" },
+      {
+        command: { text: "刪除", click: deleteBook },
+        title: " ",
+        width: "120px",
+      },
+    ],
+  });
 });
-
 function getBooksFromLocalStorage() {
   const stored = localStorage.getItem("BookList");
   return stored ? JSON.parse(stored) : [];
@@ -137,49 +182,6 @@ function getBooksFromLocalStorage() {
 function getCombinedBookData() {
   return BOOK_METADATA.concat(getBooksFromLocalStorage());
 }
-//Grid
-loadBookData();
-
-$("#book_grid").kendoGrid({
-  dataSource: {
-    data: getCombinedBookData(), //  合併資料來源
-
-    schema: {
-      model: {
-        fields: {
-          BookId: { type: "int" },
-          BookName: { type: "string" },
-          BookClassName: { type: "string" },
-          BookAuthor: { type: "string" },
-          BookBoughtDate: { type: "string" },
-        },
-      },
-    },
-    pageSize: 20,
-  },
-  toolbar: kendo.template(
-    "<div class='book-grid-toolbar'><input class='book-grid-search' placeholder='我想要找......' type='text'></input></div>"
-  ),
-  height: 550,
-  sortable: true,
-  pageable: {
-    input: true,
-    numeric: false,
-  },
-  columns: [
-    { field: "BookId", title: "書籍編號", width: "10%" },
-    { field: "BookName", title: "書籍名稱", width: "50%" },
-    { field: "BookClassName", title: "書籍種類", width: "10%" },
-    { field: "BookAuthor", title: "作者", width: "15%" },
-    { field: "BookBoughtDate", title: "購買日期", width: "15%" },
-    {
-      command: { text: "刪除", click: deleteBook },
-      title: " ",
-      width: "120px",
-    },
-  ],
-});
-
 $(".btn-quick-add-book").click(function (e) {
   e.preventDefault();
   window.location.href = "./quickbook.html";
@@ -205,5 +207,6 @@ function deleteBook(e) {
 
   utility.showNotify("刪除成功");
 }
+
 //Kendo Grid command handle
 //https://demos.telerik.com/kendo-ui/grid/custom-command
