@@ -90,23 +90,27 @@ $(function () {
       },
     })
     .data("kendoValidator");
-  $("#bookForm").on("submit", function (e) {
-    e.preventDefault(); // ← 這裡要先阻止表單預設行為
-    if (!validator.validate()) {
-      e.preventDefault();
-      alert("請修正錯誤後再送出！");
-      return;
-    }
 
+  $("#bookForm").on("submit", function (e) {
     //資料送出
 
-    const bookclass = $("#book_class").val();
+    const bookclass = $("#book_class").data("kendoDropDownList").text(); // ✅ 抓到的是 text（中文）
     const name = $("#book_name").val().trim();
     const author = $("#book_author").val().trim();
     const boughtDate = $("#bought_datepicker").val().trim();
 
+    function getNextBookId() {
+      const maxId = getCombinedBookData().reduce((max, book) => {
+        const id = Number(book.BookId);
+        if (id > max) {
+          return id;
+        }
+        return max;
+      }, 0);
+      return maxId + 1;
+    }
     const newBook = {
-      BookId: Date.now(),
+      BookId: getNextBookId(), // 假設 maxId 是你在其他地方定義的最大 ID
       BookClassName: bookclass,
       BookName: name,
       BookAuthor: author,
@@ -125,18 +129,23 @@ $(function () {
     alert("新增成功！");
     const grid = $("#book_grid").data("kendoGrid");
     if (grid) {
-      grid.dataSource.data(getBooksFromLocalStorage());
+      grid.dataSource.data(getCombinedBookData());
     }
+
     // 清空欄位
+    refreshGrid();
+
     this.reset(); // 清空表單
   });
 
   //Grid
+
   loadBookData();
 
   $("#book_grid").kendoGrid({
     dataSource: {
       data: getCombinedBookData(), //  合併資料來源
+      sort: { field: "BookId", dir: "asc" }, // ✅ 新增這一行
 
       schema: {
         model: {
@@ -180,7 +189,23 @@ function getBooksFromLocalStorage() {
 }
 
 function getCombinedBookData() {
-  return BOOK_METADATA.concat(getBooksFromLocalStorage());
+  const metadataBooks = BOOK_METADATA.map((book) => ({
+    ...book,
+    source: "metadata",
+  }));
+  const localBooks = getBooksFromLocalStorage().map((book) => ({
+    ...book,
+    source: "local",
+  }));
+
+  return metadataBooks.concat(localBooks); // ✅ 有帶 source 屬性的版本
+}
+//重整grid資料
+function refreshGrid() {
+  const grid = $("#book_grid").data("kendoGrid");
+  if (grid) {
+    grid.dataSource.data(getCombinedBookData());
+  }
 }
 $(".btn-quick-add-book").click(function (e) {
   e.preventDefault();
@@ -202,10 +227,14 @@ function onChange() {}
 function deleteBook(e) {
   var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
   debugger;
-  // console.log(dataItem);
-  // console.log(dataItem.BookName);
+  console.log(dataItem);
+  console.log(dataItem.BookName);
 
+  if (!confirm("確定要刪除這本書嗎？")) {
+    return;
+  }
   utility.showNotify("刪除成功");
+  refreshGrid();
 }
 
 //Kendo Grid command handle
